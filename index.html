@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FastAPI CRUD Operations</title>
     <link rel="stylesheet" href="static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 
@@ -62,47 +63,55 @@
     </div>
 
     <script>
-        const apiUrl = "https://delme-users-1.onrender.com";
+        const apiUrl = "https://delme-users-1.onrender.com"; // Update this URL if necessary
 
+        async function fetchRootMessage() { 
+            try {
+                const response = await axios.get(`${apiUrl}/`);
+                console.log(response.data.message);  // Log the response to the console or display it in the UI
+            } catch (error) {
+                console.error("Error fetching root message:", error);
+            }
+}
         // Create user
         document.getElementById("create-user-form").addEventListener("submit", async function(e) {
             e.preventDefault();
             const name = document.getElementById("name").value;
             const email = document.getElementById("email").value;
             
-            const response = await fetch(`${apiUrl}/users/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ name, email })
-            });
-            
-            const result = await response.json();
-            alert(`User Created: ${result.name} (${result.email})`);
-            fetchUsers();
+            try {
+                const response = await axios.post(`${apiUrl}/users/`, { name, email });
+                alert(`User Created: ${response.data.name} (${response.data.email})`);
+                fetchUsers();
+            } catch (error) {
+                alert('Error creating user');
+            }
         });
 
         // Fetch all users
         async function fetchUsers() {
-            const response = await fetch(`${apiUrl}/users`);
-            const users = await response.json();
-            const tableBody = document.getElementById("users-table").querySelector("tbody");
-            tableBody.innerHTML = ""; // Clear existing rows
+            try {
+                const response = await axios.get(`${apiUrl}/users`);
+                const users = response.data;
+                const tableBody = document.getElementById("users-table").querySelector("tbody");
+                tableBody.innerHTML = ""; // Clear existing rows
 
-            users.forEach(user => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td>
-                        <button onclick="updateUser(${user.id})" class="btn btn-update-action">Update</button>
-                        <button onclick="deleteUser(${user.id})" class="btn btn-delete-action">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+                users.forEach(user => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <button onclick="updateUser(${user.id})" class="btn btn-update-action">Update</button>
+                            <button onclick="deleteUser(${user.id})" class="btn btn-delete-action">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                alert('Error fetching users');
+            }
         }
 
         // Update user
@@ -112,17 +121,13 @@
             const name = document.getElementById("update-name").value;
             const email = document.getElementById("update-email").value;
 
-            const response = await fetch(`${apiUrl}/users/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ name, email })
-            });
-
-            const result = await response.json();
-            alert(`User Updated: ${result.name} (${result.email})`);
-            fetchUsers();
+            try {
+                const response = await axios.put(`${apiUrl}/users/${id}`, { name, email });
+                alert(`User Updated: ${response.data.name} (${response.data.email})`);
+                fetchUsers();
+            } catch (error) {
+                alert('Error updating user');
+            }
         });
 
         // Delete user
@@ -130,14 +135,11 @@
             e.preventDefault();
             const id = document.getElementById("delete-id").value;
 
-            const response = await fetch(`${apiUrl}/users/${id}`, {
-                method: "DELETE"
-            });
-
-            if (response.ok) {
+            try {
+                const response = await axios.delete(`${apiUrl}/users/${id}`);
                 alert("User Deleted");
                 fetchUsers();
-            } else {
+            } catch (error) {
                 alert("User not found");
             }
         });
