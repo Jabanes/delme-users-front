@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI CRUD Operations</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>FastAPI CRUD Operations</h1>
+
+        <!-- Create User Form -->
+        <div class="form-container">
+            <h2>Create User</h2>
+            <form id="create-user-form">
+                <input type="text" id="name" placeholder="Name" required />
+                <input type="email" id="email" placeholder="Email" required />
+                <button type="submit" class="btn btn-create">Create User</button>
+            </form>
+        </div>
+
+        <!-- Users List -->
+        <div class="user-list">
+            <h2>Users</h2>
+            <button class="btn btn-fetch" onclick="fetchUsers()">Fetch All Users</button>
+            <table id="users-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Users will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Update User Form -->
+        <div class="form-container">
+            <h2>Update User</h2>
+            <form id="update-user-form">
+                <input type="number" id="update-id" placeholder="User ID" required />
+                <input type="text" id="update-name" placeholder="New Name" required />
+                <input type="email" id="update-email" placeholder="New Email" required />
+                <button type="submit" class="btn btn-update">Update User</button>
+            </form>
+        </div>
+
+        <!-- Delete User Form -->
+        <div class="form-container">
+            <h2>Delete User</h2>
+            <form id="delete-user-form">
+                <input type="number" id="delete-id" placeholder="User ID to delete" required />
+                <button type="submit" class="btn btn-delete">Delete User</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = "https://delme-users-1.onrender.com";
+
+        // Create user
+        document.getElementById("create-user-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            
+            const response = await fetch(`${apiUrl}/users/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ name, email })
+            });
+            
+            const result = await response.json();
+            alert(`User Created: ${result.name} (${result.email})`);
+            fetchUsers();
+        });
+
+        // Fetch all users
+        async function fetchUsers() {
+            const response = await fetch(`${apiUrl}/users`);
+            const users = await response.json();
+            const tableBody = document.getElementById("users-table").querySelector("tbody");
+            tableBody.innerHTML = ""; // Clear existing rows
+
+            users.forEach(user => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <button onclick="updateUser(${user.id})" class="btn btn-update-action">Update</button>
+                        <button onclick="deleteUser(${user.id})" class="btn btn-delete-action">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update user
+        document.getElementById("update-user-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const id = document.getElementById("update-id").value;
+            const name = document.getElementById("update-name").value;
+            const email = document.getElementById("update-email").value;
+
+            const response = await fetch(`${apiUrl}/users/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ name, email })
+            });
+
+            const result = await response.json();
+            alert(`User Updated: ${result.name} (${result.email})`);
+            fetchUsers();
+        });
+
+        // Delete user
+        document.getElementById("delete-user-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const id = document.getElementById("delete-id").value;
+
+            const response = await fetch(`${apiUrl}/users/${id}`, {
+                method: "DELETE"
+            });
+
+            if (response.ok) {
+                alert("User Deleted");
+                fetchUsers();
+            } else {
+                alert("User not found");
+            }
+        });
+    </script>
+</body>
+</html>
